@@ -1,0 +1,300 @@
+
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<link rel=stylesheet type="text/css" href="/css/main.css">
+		<link rel=stylesheet type="text/css" href="/css/projects.css">
+		<script src="/js/jquery/jquery.min.js"></script>
+		<title>Pike Suggester - decino.nl</title>
+		<meta name="viewport" content="width=940px, min-width=940px">
+	</head>
+	<body onScroll="checkForTransparency()">
+		<div id="siteHeader">
+			<div id="siteHeaderMenu">
+				<a href="/"><img id="siteHeaderLogo" src="/images/main/site_logo.png"></a>
+				<div id="siteHeaderTitle">Blog</div>
+				<a href="/donate"><div id="siteHeaderButton">Donate<div class="buttonLine" id="siteHeaderButtonLine"></div></div></a>
+				<a href="/about"><div id="siteHeaderButton">About<div class="buttonLine" id="siteHeaderButtonLine"></div></div></a>
+				<a href="/blog"><div id="siteHeaderButton">Blog<div class="buttonLine" id="siteHeaderButtonLine"></div></div></a>
+				<a href="/"><div id="siteHeaderButton">Projects<div class="buttonLine" id="siteHeaderButtonLine"></div></div></a>
+			</div>
+		</div>
+		<div id="siteHeaderLine"></div>
+		<br>
+		<div id="siteContainer">
+		<script>
+			function setHeaderTitle()
+			{
+				document.getElementById("siteHeaderTitle").innerHTML = "Pike Suggester";
+			}
+
+			function checkForTransparency()
+			{
+				var height = $(window).scrollTop();
+
+				if (height > 160)
+				{
+					document.getElementById('siteHeader').style.opacity = 0.1;
+					document.getElementById('siteHeaderLine').style.opacity = 0.1;
+
+					$("#siteHeader").mouseenter(function()
+					{
+						$("#siteHeader").css("opacity", "1.0");
+						$("#siteHeaderLine").css("opacity", "1.0");
+					});
+
+					$("#siteHeader").mouseleave(function()
+					{
+						$("#siteHeader").css("opacity", "0.1");
+						$("#siteHeaderLine").css("opacity", "0.1");
+					});
+				}
+				else
+				{
+					document.getElementById('siteHeader').style.opacity = 1.0;
+					document.getElementById('siteHeaderLine').style.opacity = 1.0;
+
+					$("#siteHeader").unbind();
+					$("#siteHeaderLine").unbind();
+				}
+			}
+			setHeaderTitle();
+		</script>
+</body>
+<head>
+	<meta property="og:url"       	content="http://www.decino.nl/projects/pike-suggester"/>
+	<meta property="og:type"       	content="website"/>
+	<meta property="og:title"     	content="Pike Suggester"/>
+	<meta property="og:description"	content="Buckethead Pikes are 30-minute albums of instrumental music. There's literally hundreds of them and can unfortunately be very overwhelming for those unfamiliar with the Pike series. This online tool allows you to filter Pikes by music genre to find Pikes that suit your mood or music taste."/>
+	<meta property="og:image"      	content="/../images/projects/thumbnails/pike_suggester.jpg"/>
+	<link rel=stylesheet type="text/css" href="../css/pike-suggester.css">
+	<script src="/../js/pikesuggester/pikes.js"></script>
+</head>
+<body>
+Click on an option below to include Pikes with chosen tag, click it a second time to exclude it from the list and a third click will set it back to neutral.
+<br><br>
+<div id="optionsFilterContainer"></div>
+<br><br>
+<div id="pikeContainer">
+</div>
+<br><br>
+<hr>
+<a href="/">Back</a>
+<script>
+	var selected_pike = 0;
+	var include = 0x0000;
+	var exclude = 0x0000;
+
+	function tagToString(current_tag)
+	{
+		switch (current_tag)
+		{
+			case tag.MEL:	return "Mellow";
+			case tag.RCK: 	return "Rock";
+			case tag.HVY: 	return "Heavy";
+			case tag.MLD: 	return "Melodic";
+			case tag.EXP: 	return "Experimental";
+			case tag.AMB: 	return "Ambient";
+			case tag.FNK: 	return "Funky";
+			case tag.TCH: 	return "Technical";
+			case tag.BSY: 	return "Bassy";
+			case tag.JAM: 	return "Extended Jam";
+
+			default: 		return "Unknown";
+		}
+	}
+
+	function selectFilterOption(button, filter_value)
+	{
+		button.value = (button.value + 1) % 3;
+
+		include = include & ~filter_value;
+		exclude = exclude & ~filter_value;
+
+		switch (button.value)
+		{
+			case 0:		button.style.backgroundColor = "#C8C8C8"; 							break;
+			case 1:		button.style.backgroundColor = "#82A34D"; include |= filter_value; 	break;
+			case 2:		button.style.backgroundColor = "#FF4D4D"; exclude |= filter_value; 	break;
+
+			default:	break;
+		}
+		sortPikes();
+	}
+
+	function createFilterOptions()
+	{
+		var options_container = document.getElementById("optionsFilterContainer");
+
+		for (var current_tag in tag)
+		{
+			var option = document.createElement("div");
+
+			option.id = "optionsTagIcon";
+			option.innerHTML = tagToString(tag[current_tag]);
+			option.value = 0;
+			option.setAttribute("onclick", "selectFilterOption(this, " + tag[current_tag] + ")");
+
+			if (tag[current_tag] == tag.EXP || tag[current_tag] == tag.JAM)
+			{
+				option.style.marginRight = "0px";
+			}
+			if (tag[current_tag] >= tag.AMB)
+			{
+				option.style.marginBottom = "0px";
+			}
+			document.getElementById("optionsFilterContainer").appendChild(option);
+		}
+	}
+	createFilterOptions();
+
+	function closePikeWindow()
+	{
+		var window_old = document.getElementById("pikeWindowContainer");
+
+		if (window_old != null)
+		{
+			window_old.outerHTML = "";
+		}
+		selected_pike = 0;
+	}
+
+	function createWindowPlayer()
+	{
+		var player = document.createElement("div");
+
+		player.id = "pikeWindowPlayer";
+		player.innerHTML = '<iframe style="border: 0; width: 100%; height: 120px;" src="https://bandcamp.com/EmbeddedPlayer/album=' + pikes[selected_pike - 1].album_id + '/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/transparent=true/" seamless></iframe>';
+
+		document.getElementById("pikeWindowContainer").appendChild(player);
+	}
+
+	function createTagIcons()
+	{
+		for (var current_tag in tag)
+		{
+			if ((pikes[selected_pike - 1].tags & tag[current_tag]) == tag[current_tag])
+			{
+				var tag_icon = document.createElement("div");
+
+				tag_icon.id = "tagIcon";
+				tag_icon.innerHTML = tagToString(tag[current_tag]);
+				document.getElementById("tagContainer").appendChild(tag_icon);
+			}
+		}
+	}
+
+	function createWindowTags()
+	{
+		var tag_container = document.createElement("div");
+
+		tag_container.id = "tagContainer";
+		document.getElementById("pikeWindowContainer").appendChild(tag_container);
+
+		createTagIcons();
+	}
+
+	function createWindowDescription()
+	{
+		var description_container = document.createElement("div");
+
+		description_container.id = "pikeDescriptionContainer";
+		document.getElementById("pikeWindowContainer").appendChild(description_container);
+
+		var description_title = document.createElement("div");
+
+		description_title.id = "pikeDescriptionTitle";
+		description_title.innerHTML = "Description";
+		document.getElementById("pikeDescriptionContainer").appendChild(description_title);
+
+		var description_text = document.createElement("div");
+
+		description_text.innerHTML = pike_descriptions[selected_pike - 1];
+		document.getElementById("pikeDescriptionContainer").appendChild(description_text);
+	}
+
+	function createWindowCloseButton()
+	{
+		var close_button = document.createElement("div");
+
+		close_button.id = "pikeWindowClose";
+		close_button.innerHTML = "Close window";
+		close_button.setAttribute("onclick", "closePikeWindow()");
+
+		document.getElementById("pikeWindowContainer").appendChild(close_button);
+	}
+
+	function openPikeWindow(pike)
+	{
+		var window_new = document.createElement("div");
+
+		if (selected_pike == pike.value)
+		{
+			return;
+		}
+		closePikeWindow();
+		selected_pike = pike.value;
+
+		window_new.id = "pikeWindowContainer";
+		document.getElementById("pikeContainer").appendChild(window_new);
+
+		createWindowPlayer();
+		createWindowTags();
+		createWindowDescription();
+		createWindowCloseButton();
+	}
+
+	function sortPikes()
+	{
+		closePikeWindow();
+
+		var count = 1;
+		var container = document.getElementById("pikeContainer");
+
+		while (container.hasChildNodes())
+		{
+			container.removeChild(container.lastChild);
+		}
+		for (var index = 1; index <= pikes.length; index++)
+		{
+			if ((pikes[index - 1].tags & exclude) && exclude != 0x0000)
+			{
+				continue;
+			}
+			if ((pikes[index - 1].tags & include) != include)
+			{
+				continue;
+			}
+			var pike = document.createElement("img");
+
+			if (count % 5 != 0)
+			{
+				pike.style.marginRight = '5px';
+			}
+			pike.id = "pikeImage";
+			pike.src = "/../images/projects/pikesuggester/pike" + index + ".jpg";
+			pike.value = index;
+			pike.setAttribute("onclick", "openPikeWindow(this)");
+
+			container.appendChild(pike);
+			count++;
+		}
+	}
+	sortPikes();
+
+	$(document).keyup(function(e)
+	{
+		var key = e.keyCode ? e.keyCode : e.which;
+
+		if (key == 27)
+		{
+			closePikeWindow();
+		}
+	});
+</script>
+		</div>
+		<div id="siteFooter">
+			&#169; 2015-2019 decino. All rights reserved.
+		</div>
+	</body>
+</html>
